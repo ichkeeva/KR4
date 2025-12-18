@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мини-дневник настроения</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .date-box {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .date-box h2 {
+            font-size: 1.3rem;
+            font-weight: normal;
+        }
+
+        .mood-selector h3 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .moods {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .mood-btn {
+            border: none;
+            background: #f0f0f0;
+            border-radius: 15px;
+            padding: 20px 15px;
+            width: 120px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mood-btn:hover {
+            transform: translateY(-5px);
+            background: #e0e0e0;
+        }
+
+        .mood-btn.active {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .name {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .selected-mood {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            display: none;
+        }
+
+        .selected-mood h3 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .mood-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .big-emoji {
+            font-size: 4rem;
+        }
+
+        .mood-info h4 {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .history {
+            margin-bottom: 20px;
+        }
+
+        .history h3 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .empty {
+            text-align: center;
+            color: #666;
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            font-size: 1.1rem;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .history-emoji {
+            font-size: 2rem;
+            margin-right: 15px;
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .history-details {
+            flex-grow: 1;
+        }
+
+        .history-date {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .history-name {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .clear-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #ff3742;
+        }
+
+        .footer {
+            text-align: center;
+            color: #666;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .moods {
+                gap: 10px;
+            }
+            
+            .mood-btn {
+                width: 100px;
+                padding: 15px 10px;
+            }
+            
+            .emoji {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📔 Мини-дневник настроения</h1>
+        
+        <div class="date-box">
+            <h2 id="currentDate">Загрузка даты...</h2>
+        </div>
+
+        <div class="mood-selector">
+            <h3>Как вы себя чувствуете сегодня?</h3>
+            <div class="moods" id="moodsContainer">
+                <!-- Кнопки настроений будут здесь -->
+            </div>
+        </div>
+
+        <div class="selected-mood" id="selectedMoodSection">
+            <h3>Ваше настроение на сегодня:</h3>
+            <div class="mood-display">
+                <div class="big-emoji" id="selectedEmoji">😊</div>
+                <div class="mood-info">
+                    <h4 id="selectedName">Счастливый</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3>📅 История (<span id="historyCount">0</span>)</h3>
+            
+            <div id="emptyHistory" class="empty">
+                Ещё нет записей. Выберите своё настроение!
+            </div>
+            
+            <div class="history-list" id="historyList">
+                <!-- История будет здесь -->
+            </div>
+            
+            <button class="clear-btn" id="clearBtn">
+                Очистить историю
+            </button>
+        </div>
+
+        <div class="footer">
+            <p>Дневник настроения • HTML/JS версия</p>
+        </div>
+    </div>
+
+    <script>
+        // Данные настроений
+        const moods = [
+            { id: 1, emoji: '😊', name: 'Счастливый' },
+            { id: 2, emoji: '😢', name: 'Грустный' },
+            { id: 3, emoji: '😡', name: 'Злой' },
+            { id: 4, emoji: '😴', name: 'Уставший' },
+            { id: 5, emoji: '😃', name: 'Восторг' },
+        ];
+
+        // Состояние приложения
+        let selectedMood = null;
+        let history = JSON.parse(localStorage.getItem('moodHistory')) || [];
+
+        // Функция для отображения текущей даты
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            document.getElementById('currentDate').textContent = 
+                now.toLocaleDateString('ru-RU', options);
+        }
+
+        // Функция для создания кнопок настроений
+        function createMoodButtons() {
+            const container = document.getElementById('moodsContainer');
+            container.innerHTML = '';
+            
+            moods.forEach(mood => {
+                const button = document.createElement('button');
+                button.className = 'mood-btn';
+                button.innerHTML = `
+                    <span class="emoji">${mood.emoji}</span>
+                    <span class="name">${mood.name}</span>
+                `;
+                
+                button.onclick = () => selectMood(mood);
+                container.appendChild(button);
+            });
+        }
+
+        // Функция выбора настроения
+        function selectMood(mood) {
+            selectedMood = mood;
+            
+            // Обновляем выделение кнопок
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.mood-btn').classList.add('active');
+            
+            // Показываем выбранное настроение
+            document.getElementById('selectedEmoji').textContent = mood.emoji;
+            document.getElementById('selectedName').textContent = mood.name;
+            document.getElementById('selectedMoodSection').style.display = 'block';
+            
+            // Добавляем в историю
+            addToHistory(mood);
+            
+            // Сохраняем в localStorage
+            saveToLocalStorage();
+        }
+
+        // Функция добавления в историю
+        function addToHistory(mood) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ru-RU');
+            
+            const entry = {
+                id: Date.now(),
+                emoji: mood.emoji,
+                name: mood.name,
+                date: dateStr
+            };
+            
+            history.unshift(entry); // Добавляем в начало
+            updateHistoryDisplay();
+        }
+
+        // Функция обновления отображения истории
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            const emptyHistory = document.getElementById('emptyHistory');
+            const historyCount = document.getElementById('historyCount');
+            
+            historyCount.textContent = history.length;
+            
+            if (history.length === 0) {
+                emptyHistory.style.display = 'block';
+                historyList.style.display = 'none';
+                return;
+            }
+            
+            emptyHistory.style.display = 'none';
+            historyList.style.display = 'block';
+            
+            historyList.innerHTML = '';
+            
+            history.forEach(entry => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="history-emoji">${entry.emoji}</div>
+                    <div class="history-details">
+                        <div class="history-date">${entry.date}</div>
+                        <div class="history-name">${entry.name}</div>
+                    </div>
+                `;
+                historyList.appendChild(item);
+            });
+        }
+
+        // Функция очистки истории
+        function clearHistory() {
+            if (confirm('Вы уверены, что хотите очистить всю историю?')) {
+                history = [];
+                selectedMood = null;
+                localStorage.removeItem('moodHistory');
+                document.getElementById('selectedMoodSection').style.display = 'none';
+                document.querySelectorAll('.mood-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                updateHistoryDisplay();
+            }
+        }
+
+        // Функция сохранения в localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('moodHistory', JSON.stringify(history));
+        }
+
+        // Функция загрузки из localStorage
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('moodHistory');
+            if (saved) {
+                history = JSON.parse(saved);
+                if (history.length > 0) {
+                    // Восстанавливаем последнее выбранное настроение
+                    const lastMood = moods.find(m => m.emoji === history[0].emoji);
+                    if (lastMood) {
+                        selectedMood = lastMood;
+                        document.getElementById('selectedEmoji').textContent = lastMood.emoji;
+                        document.getElementById('selectedName').textContent = lastMood.name;
+                        document.getElementById('selectedMoodSection').style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        window.onload = function() {
+            updateCurrentDate();
+            createMoodButtons();
+            loadFromLocalStorage();
+            updateHistoryDisplay();
+            
+            // Назначаем обработчик для кнопки очистки
+            document.getElementById('clearBtn').onclick = clearHistory;
+            
+            // Автоматически выделяем последнее выбранное настроение
+            if (selectedMood) {
+                const buttons = document.querySelectorAll('.mood-btn');
+                buttons.forEach((btn, index) => {
+                    if (moods[index].id === selectedMood.id) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        };
+    </script>
+</body>
+</html>
